@@ -1,4 +1,4 @@
-name: Android CI
+name: Flutter Build APK
 
 on: [push]
 
@@ -9,30 +9,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: set up JDK
+    # Крок 1: Встановлюємо Java, яка потрібна для збірки Android
+    - name: Set up JDK
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'zulu'
 
-    # Крок 1: Якщо файлу gradlew немає, цей крок створить його автоматично
-    - name: Ensure Gradle Wrapper exists
-      run: |
-        if [ ! -f "gradlew" ]; then
-          gradle wrapper
-        fi
+    # Крок 2: Встановлюємо Flutter SDK (найновішу стабільну версію)
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
 
-    # Крок 2: Надаємо файлу права на запуск у Linux
-    - name: Change permissions for gradlew
-      run: chmod +x gradlew
+    # Крок 3: Завантажуємо залежності проєкту (бібліотеки)
+    - name: Install dependencies
+      run: flutter pub get
 
-    # Крок 3: Запуск збірки
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug
+    # Крок 4: Запускаємо збірку APK у режимі релізу
+    - name: Build APK
+      run: flutter build apk --release --no-tree-shake-icons
 
-    # Крок 4: Збереження готового APK, щоб його можна було завантажити
-    - name: Upload APK
+    # Крок 5: Зберігаємо готовий APK у вкладку Artifacts
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/*.apk
+        name: SketchIDE-release-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
